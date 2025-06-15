@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"context"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -17,14 +18,23 @@ type ProxyHandler struct {
 }
 
 func (p *ProxyHandler) ServeHTTP(w http.ResponseWriter, request *http.Request) {
-	newRequest, _ := http.NewRequest(request.Method, p.URL, request.Body)
+	finalUrl := p.URL + request.URL.Path
+	newRequest, _ := http.NewRequest(request.Method, finalUrl, request.Body)
 	response, err := p.HttpClient.Do(newRequest)
 
 	if err != nil {
 		log.Fatalf("An error occurred: %+v", err)
 	}
 
-	response.Write(w)
+	body, err := io.ReadAll(response.Body)
+	defer response.Body.Close()
+
+	if err != nil {
+		log.Fatalf("An error occurred: %+v", err)
+	}
+
+	w.Header().Add("Content-Type", response.Header.Get("Content-Type"))
+	w.Write(body)
 }
 
 func NewServer(destinationUrl string, port int) *ProxyServer {
