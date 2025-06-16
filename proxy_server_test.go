@@ -2,7 +2,10 @@ package proxy_test
 
 import (
 	"go-proxy"
+	"io"
+	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 )
 
@@ -28,40 +31,69 @@ func TestProxyTunnel(t *testing.T) {
 
 	const (
 		successfulStatusCode = 200
-		proxyUrl             = "http://dummyjson.com"
 		proxyServerPort      = 3000
 	)
 
 	// Setup proxy server & response recorder
-	server := proxy.NewServer(proxyUrl, proxyServerPort)
+	mockHttpHandler := func(w http.ResponseWriter, request *http.Request) {
+		defer request.Body.Close()
+
+		body, err := io.ReadAll(request.Body)
+
+		if err != nil {
+			w.WriteHeader(500)
+			t.Errorf("An error occurred in mocked http handler : %+v", err)
+		}
+
+		w.WriteHeader(200)
+		w.Write(body)
+	}
+
+	mockedSourceServer := httptest.NewServer(http.HandlerFunc(mockHttpHandler))
+	defer mockedSourceServer.Close()
+	server := proxy.NewServer(mockedSourceServer.URL, proxyServerPort)
 	rr := httptest.NewRecorder()
 
 	t.Run("Returns OK for /test", func(t *testing.T) {
 		rr.Flush()
-		server.Server.Handler.ServeHTTP(rr, httptest.NewRequest("GET", "http://localhost:3000/test", nil))
+
+		proxyRequest := httptest.NewRequest("GET", "http://localhost:3000/test", nil)
+
+		// Execute Requests
+		server.Server.Handler.ServeHTTP(rr, proxyRequest)
+		shadowResponse, err := http.Get(mockedSourceServer.URL)
+
+		if err != nil {
+			t.Fatalf("An unexpected error occurred while executing shadow request %+v", err)
+		}
 
 		if rr.Code != successfulStatusCode {
 			t.Errorf("Expected status code value of %v, but got %v", successfulStatusCode, rr.Code)
 		}
+
+		if !reflect.DeepEqual(rr.Header(), shadowResponse.Header) {
+			t.Errorf("Proxied Response has different header values than the shadowed request:\nExpected: %+v\nActual: %+v", rr.Header(), shadowResponse.Header)
+		}
 	})
 
 	t.Run("Returns todo list for /todos/1", func(t *testing.T) {
-		const (
-			requiredContentType = "application/json; charset=utf-8"
-		)
-
 		rr.Flush()
-		server.Server.Handler.ServeHTTP(rr, httptest.NewRequest("GET", "http://localhost:3000/todos/random", nil))
+
+		proxyRequest := httptest.NewRequest("GET", "http://localhost:3000/todos/1", nil)
+		server.Server.Handler.ServeHTTP(rr, proxyRequest)
+		shadowResponse, err := http.Get(mockedSourceServer.URL + "/todos/1")
+
+		if err != nil {
+			t.Fatalf("An unexpected error occurred while executing shadow request %+v", err)
+		}
 
 		// Test for successful status code
 		if rr.Code != successfulStatusCode {
 			t.Errorf("Expected status code value of %v, but got %v", successfulStatusCode, rr.Code)
 		}
 
-		responseContentType := rr.Header().Get("Content-Type")
-
-		if responseContentType != requiredContentType {
-			t.Errorf("Expected content type : %q, but got %q", requiredContentType, responseContentType)
+		if !reflect.DeepEqual(rr.Header(), shadowResponse.Header) {
+			t.Errorf("Proxied Response has different header values than the shadowed request:\nExpected: %+v\nActual: %+v", rr.Header(), shadowResponse.Header)
 		}
 	})
 }
