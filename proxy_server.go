@@ -33,8 +33,14 @@ func (p *ProxyHandler) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 		log.Fatalf("An error occurred: %+v", err)
 	}
 
-	w.Header().Add("Content-Type", response.Header.Get("Content-Type"))
+	writeHeaders(w, *response)
 	w.Write(body)
+}
+
+func writeHeaders(w http.ResponseWriter, response http.Response) {
+	for key, value := range response.Header {
+		w.Header()[key] = value
+	}
 }
 
 func NewServer(destinationUrl string, port int) *ProxyServer {
