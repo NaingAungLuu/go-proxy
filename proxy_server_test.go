@@ -33,7 +33,7 @@ func TestProxyTunnel(t *testing.T) {
 		successfulStatusCode = 200
 		proxyServerPort      = 3000
 	)
-	t.Run("Returns OK for /test", func(t *testing.T) {
+	t.Run("Returns OK for test endpoint", func(t *testing.T) {
 		mockedSourceServer := setupMockedServer(t)
 		defer mockedSourceServer.Close()
 
@@ -59,7 +59,7 @@ func TestProxyTunnel(t *testing.T) {
 		}
 	})
 
-	t.Run("Returns todo list for /todos/1", func(t *testing.T) {
+	t.Run("Returns todo list for todos endpoint", func(t *testing.T) {
 		mockedSourceServer := setupMockedServer(t)
 		defer mockedSourceServer.Close()
 
