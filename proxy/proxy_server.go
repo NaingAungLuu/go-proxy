@@ -1,7 +1,9 @@
 package proxy
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -10,11 +12,13 @@ import (
 
 type ProxyServer struct {
 	Server *http.Server
+	Logger *io.Writer
 }
 
 type ProxyHandler struct {
 	URL        string
 	HttpClient *http.Client
+	Logger     io.Writer
 }
 
 func (p *ProxyHandler) ServeHTTP(w http.ResponseWriter, request *http.Request) {
@@ -44,6 +48,14 @@ func (p *ProxyHandler) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 	writeHeaders(w, *response)
 	w.WriteHeader(response.StatusCode)
 	w.Write(body)
+
+	if p.Logger != nil {
+		message := fmt.Sprintf("New request received\nURL:%+v\nMethod:%+v\nHeaders:%+v\nBody:%+v", request.URL, request.Method, request.Header, request.Body)
+
+		responseMessage := fmt.Sprintf("RESPONSE:\nHeaders\n%+v\nBody:\n%+v", response.Header, body)
+
+		p.Logger.Write(bytes.NewBufferString(message + "\n" + responseMessage))
+	}
 }
 
 func writeHeaders(w http.ResponseWriter, response http.Response) {
