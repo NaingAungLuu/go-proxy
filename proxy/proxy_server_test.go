@@ -1,7 +1,7 @@
 package proxy_test
 
 import (
-	"go-proxy"
+	"go-proxy/proxy"
 	"io"
 	"net/http"
 	"net/http/httptest"
