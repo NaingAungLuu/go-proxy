@@ -4,8 +4,13 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"go-proxy"
+	"go-proxy/proxy"
+	"testing"
 )
+
+func TestSomething(t *testing.T) {
+	t.Error("Wassupppp")
+}
 
 // parseArgs parses and validates command line arguments
 // Returns the URL, port, and any error encountered during parsing or validation
@@ -47,7 +52,7 @@ func main() {
 		return
 	}
 
-	fmt.Println("Starting Server...")
+	fmt.Printf("Starting Server on port %+v...", port)
 	server := proxy.NewServer(url, port)
 	server.Start()
 }
