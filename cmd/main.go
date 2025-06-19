@@ -5,6 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"go-proxy/proxy"
+	"net/http"
+	"strconv"
 	"testing"
 )
 
@@ -38,7 +40,7 @@ func parseArgs() (string, int, error) {
 	}
 
 	// Additional validation could be added here
- 	if finalPort < 1 || finalPort > 65535 {
+	if finalPort < 1 || finalPort > 65535 {
 		return "", 0, fmt.Errorf("port must be between 1 and 65535")
 	}
 
@@ -53,6 +55,6 @@ func main() {
 	}
 
 	fmt.Printf("Starting Server on port %+v...", port)
-	server := proxy.NewServer(url, port)
-	server.Start()
+	server := proxy.NewServer(url)
+	http.ListenAndServe(":"+strconv.Itoa(port), http.HandlerFunc(server.ServeHTTP))
 }
