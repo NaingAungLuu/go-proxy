@@ -1,17 +1,17 @@
 package proxy
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"strconv"
 )
 
 type ProxyServer struct {
-	Server  *http.Server
-	Handler *ProxyHandler
+	HttpClient *http.Client
+	URL        string
+	Port       int
+	Logger     io.Writer
 }
 
 type ProxyHandler struct {
@@ -21,7 +21,7 @@ type ProxyHandler struct {
 	Port       int
 }
 
-func (p *ProxyHandler) ServeHTTP(w http.ResponseWriter, request *http.Request) {
+func (p *ProxyServer) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 	finalUrl := p.URL + request.URL.Path
 	newRequest, _ := http.NewRequest(request.Method, finalUrl, request.Body)
 
@@ -66,34 +66,12 @@ func writeHeaders(w http.ResponseWriter, response http.Response) {
 	}
 }
 
-func NewServer(destinationUrl string, port int) *ProxyServer {
-	serverAddress := ":" + strconv.Itoa(port)
-	proxyHandler := ProxyHandler{
+func NewServer(destinationUrl string) *ProxyServer {
+	server := &ProxyServer{
 		URL:        destinationUrl,
-		Port:       port,
-		HttpClient: &http.Client{},
 		Logger:     nil,
+		Port:       3000,
+		HttpClient: &http.Client{},
 	}
-	handlerFunc := http.HandlerFunc(proxyHandler.ServeHTTP)
-	proxyServer := &ProxyServer{
-		Server: &http.Server{
-			Addr:    serverAddress,
-			Handler: handlerFunc,
-		},
-	}
-	return proxyServer
-}
-
-func (p *ProxyServer) Start() {
-	p.Server.ListenAndServe()
-	err := p.Server.ListenAndServe()
-	if err != nil {
-		log.Printf("An error occurred: %+v", err)
-	}
-}
-
-func (p *ProxyServer) Stop() {
-	// log.Println("Shutting Down Server")
-	// defer log.Println("Server gracefully shutdown")
-	p.Server.Shutdown(context.Background())
+	return server
 }
