@@ -38,7 +38,7 @@ func parseArgs() (string, int, error) {
 	}
 
 	// Additional validation could be added here
-	if finalPort < 1 || finalPort > 65535 {
+ 	if finalPort < 1 || finalPort > 65535 {
 		return "", 0, fmt.Errorf("port must be between 1 and 65535")
 	}
 

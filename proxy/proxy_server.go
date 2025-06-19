@@ -1,7 +1,6 @@
 package proxy
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -11,14 +10,15 @@ import (
 )
 
 type ProxyServer struct {
-	Server *http.Server
-	Logger *io.Writer
+	Server  *http.Server
+	Handler *ProxyHandler
 }
 
 type ProxyHandler struct {
-	URL        string
 	HttpClient *http.Client
 	Logger     io.Writer
+	URL        string
+	Port       int
 }
 
 func (p *ProxyHandler) ServeHTTP(w http.ResponseWriter, request *http.Request) {
@@ -50,11 +50,12 @@ func (p *ProxyHandler) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 	w.Write(body)
 
 	if p.Logger != nil {
-		message := fmt.Sprintf("New request received\nURL:%+v\nMethod:%+v\nHeaders:%+v\nBody:%+v", request.URL, request.Method, request.Header, request.Body)
+		initialMessage := fmt.Sprintf("New request received\nURL:%+v\nMethod:%+v\nHeaders:%+v\nBody:%+v", request.URL, request.Method, request.Header, request.Body)
+		p.Logger.Write([]byte(initialMessage))
 
 		responseMessage := fmt.Sprintf("RESPONSE:\nHeaders\n%+v\nBody:\n%+v", response.Header, body)
 
-		p.Logger.Write(bytes.NewBufferString(message + "\n" + responseMessage))
+		p.Logger.Write([]byte(responseMessage))
 	}
 }
 
@@ -67,20 +68,24 @@ func writeHeaders(w http.ResponseWriter, response http.Response) {
 
 func NewServer(destinationUrl string, port int) *ProxyServer {
 	serverAddress := ":" + strconv.Itoa(port)
+	proxyHandler := ProxyHandler{
+		URL:        destinationUrl,
+		Port:       port,
+		HttpClient: &http.Client{},
+		Logger:     nil,
+	}
+	handlerFunc := http.HandlerFunc(proxyHandler.ServeHTTP)
 	proxyServer := &ProxyServer{
 		Server: &http.Server{
-			Addr: serverAddress,
-			Handler: &ProxyHandler{
-				URL:        destinationUrl,
-				HttpClient: &http.Client{},
-			},
+			Addr:    serverAddress,
+			Handler: handlerFunc,
 		},
 	}
-
 	return proxyServer
 }
 
 func (p *ProxyServer) Start() {
+	p.Server.ListenAndServe()
 	err := p.Server.ListenAndServe()
 	if err != nil {
 		log.Printf("An error occurred: %+v", err)

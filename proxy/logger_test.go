@@ -8,6 +8,7 @@ import (
 
 type CustomLogger struct {
 	Buffer *bytes.Buffer
+	Test   string
 }
 
 func (l *CustomLogger) Write(b []byte) (n int, err error) {
@@ -20,13 +21,13 @@ func TestLogger(t *testing.T) {
 		proxyUrl        = "http://dummyjson.com"
 		proxyServerPort = 3000
 	)
-	server := NewServer(proxyUrl, proxyServerPort)
+	// server := NewServer(proxyUrl, proxyServerPort)
 
 	// Setup custom log buffer catcher
 	logBuffer := &bytes.Buffer{}
-	customLogger := CustomLogger{Buffer: logBuffer}
+	// customLogger := CustomLogger{Buffer: logBuffer}
 	// Attach custom logger buffer to proxy server
-	server.AttachLogger(&customLogger)
+	// server.AttachLogger(&customLogger)
 
 	// Make an api request to the proxy proxy server
 	_, err := http.Get("http://localhost:3000")

@@ -16,9 +16,7 @@ func TestProxyServerCreation(t *testing.T) {
 	)
 	t.Run("NewServer creates proper proxy", func(t *testing.T) {
 		server := proxy.NewServer(proxyUrl, proxyServerPort)
-
-		expectedAddress := ":3000"
-		// expectedUrl := proxyUrl
+		expectedAddress := ":3000" // expectedUrl := proxyUrl
 
 		if server.Server.Addr != expectedAddress {
 			t.Errorf("Expected Server port address to be %q, but got %q", expectedAddress, server.Server.Addr)
@@ -38,6 +36,7 @@ func TestProxyTunnel(t *testing.T) {
 		defer mockedSourceServer.Close()
 
 		server := proxy.NewServer(mockedSourceServer.URL, proxyServerPort)
+		go func() { server.Start() }()
 		rr := httptest.NewRecorder()
 
 		proxyRequest := httptest.NewRequest("GET", "http://localhost:3000/test", nil)
