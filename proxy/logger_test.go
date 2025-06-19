@@ -1,8 +1,10 @@
-package proxy
+package proxy_test
 
 import (
 	"bytes"
+	"go-proxy/proxy"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -21,20 +23,23 @@ func TestLogger(t *testing.T) {
 		proxyUrl        = "http://dummyjson.com"
 		proxyServerPort = 3000
 	)
-	// server := NewServer(proxyUrl, proxyServerPort)
+	mockedServer := setupMockedServer(t)
+	server := proxy.NewServer(mockedServer.URL)
 
 	// Setup custom log buffer catcher
 	logBuffer := &bytes.Buffer{}
-	// customLogger := CustomLogger{Buffer: logBuffer}
+	customLogger := CustomLogger{Buffer: logBuffer}
 	// Attach custom logger buffer to proxy server
-	// server.AttachLogger(&customLogger)
+	server.AttachLogger(&customLogger)
 
 	// Make an api request to the proxy proxy server
-	_, err := http.Get("http://localhost:3000")
+	request, err := http.NewRequest("GET", "/test", nil)
 
 	if err != nil {
 		t.Errorf("Unexpected error occurred: %+v", err)
 	}
+
+	server.ServeHTTP(httptest.NewRecorder(), request)
 
 	if logBuffer.Len() <= 0 {
 		t.Error("Log buffer not received")

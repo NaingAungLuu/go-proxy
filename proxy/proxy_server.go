@@ -66,6 +66,10 @@ func writeHeaders(w http.ResponseWriter, response http.Response) {
 	}
 }
 
+func (p *ProxyServer) AttachLogger(logger io.Writer) {
+	p.Logger = logger
+}
+
 func NewServer(destinationUrl string) *ProxyServer {
 	server := &ProxyServer{
 		URL:        destinationUrl,
