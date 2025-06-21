@@ -10,7 +10,6 @@ import (
 type ProxyServer struct {
 	HttpClient *http.Client
 	URL        string
-	Port       int
 	Logger     io.Writer
 }
 
@@ -74,7 +73,6 @@ func NewServer(destinationUrl string) *ProxyServer {
 	server := &ProxyServer{
 		URL:        destinationUrl,
 		Logger:     nil,
-		Port:       3000,
 		HttpClient: &http.Client{},
 	}
 	return server
