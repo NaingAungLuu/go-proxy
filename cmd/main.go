@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"go-proxy/proxy"
 	"net/http"
+	"os"
 	"strconv"
 	"testing"
 )
@@ -56,5 +57,6 @@ func main() {
 
 	fmt.Printf("Starting Server on port %+v...", port)
 	server := proxy.NewServer(url)
+	server.AttachLogger(os.Stdout)
 	http.ListenAndServe(":"+strconv.Itoa(port), http.HandlerFunc(server.ServeHTTP))
 }
