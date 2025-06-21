@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 )
 
 type ProxyServer struct {
@@ -31,6 +32,9 @@ func (p *ProxyServer) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 		}
 	}
 
+	// Preprocess Request
+	stripProxyHeaders(newRequest)
+
 	response, err := p.HttpClient.Do(newRequest)
 
 	if err != nil {
@@ -50,6 +54,14 @@ func (p *ProxyServer) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 
 	if p.Logger != nil {
 		logMessage(p.Logger, *request)
+	}
+}
+
+func stripProxyHeaders(request *http.Request) {
+	for key, _ := range request.Header {
+		if strings.HasPrefix(key, "Proxy") {
+			request.Header.Del(key)
+		}
 	}
 }
 
