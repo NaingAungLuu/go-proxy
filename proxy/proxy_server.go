@@ -22,19 +22,7 @@ type ProxyHandler struct {
 }
 
 func (p *ProxyServer) ServeHTTP(w http.ResponseWriter, request *http.Request) {
-	finalUrl := p.URL + request.URL.Path
-	newRequest, _ := http.NewRequest(request.Method, finalUrl, request.Body)
-
-	// Copy headers from the original request to the new request
-	for key, values := range request.Header {
-		for _, value := range values {
-			newRequest.Header.Add(key, value)
-		}
-	}
-
-	// Preprocess Request
-	stripProxyHeaders(newRequest)
-
+	newRequest := createUpStreamRequest(*request, p.URL)
 	response, err := p.HttpClient.Do(newRequest)
 
 	if err != nil {
@@ -55,6 +43,23 @@ func (p *ProxyServer) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 	if p.Logger != nil {
 		logMessage(p.Logger, *request)
 	}
+}
+
+func createUpStreamRequest(request http.Request, destinationUrl string) *http.Request {
+	finalUrl := destinationUrl + request.URL.Path
+	newRequest, _ := http.NewRequest(request.Method, finalUrl, request.Body)
+
+	// Copy headers from the original request to the new request
+	for key, values := range request.Header {
+		for _, value := range values {
+			newRequest.Header.Add(key, value)
+		}
+	}
+
+	// Preprocess Request
+	stripProxyHeaders(newRequest)
+
+	return newRequest
 }
 
 func stripProxyHeaders(request *http.Request) {
