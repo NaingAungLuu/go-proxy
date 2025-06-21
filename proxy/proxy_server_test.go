@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -44,8 +45,39 @@ func TestProxyTunnel(t *testing.T) {
 
 	})
 
-}
+	t.Run("Strips the proxy headers", func(t *testing.T) {
+		mockedServer := setupMockedServer(t)
+		defer mockedServer.Close()
 
+		proxyServer := proxy.NewServer(mockedServer.URL)
+		proxyRequest, err := http.NewRequest("GET", "/test", nil)
+
+		if err != nil {
+			t.Fatalf("An unexpected error occurred %+v", err)
+		}
+
+		// Attach proxy headers to the request
+		proxyHeaderList := map[string]string{
+			"Proxy-Connection":    "Keep-Alive",
+			"Proxy-Authorization": "Basic",
+		}
+		for key, value := range proxyHeaderList {
+			proxyRequest.Header.Add(key, value)
+		}
+		// Make Request
+		rr := httptest.NewRecorder()
+		proxyServer.ServeHTTP(rr, proxyRequest)
+
+		// Check for headers starting with Proxy
+		for key, _ := range rr.Result().Header {
+			lowerCaseKey := strings.ToLower(key)
+			if strings.HasPrefix(lowerCaseKey, "proxy-") {
+				t.Errorf("Key: %v shouldn't be present in the response", key)
+			}
+		}
+
+	})
+}
 
 func setupMockedServer(t *testing.T) *httptest.Server {
 	mockHttpHandler := func(w http.ResponseWriter, request *http.Request) {

@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 )
 
 type ProxyServer struct {
@@ -31,6 +32,9 @@ func (p *ProxyServer) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 		}
 	}
 
+	// Preprocess Request
+	stripProxyHeaders(newRequest)
+
 	response, err := p.HttpClient.Do(newRequest)
 
 	if err != nil {
@@ -49,12 +53,15 @@ func (p *ProxyServer) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 	w.Write(body)
 
 	if p.Logger != nil {
-		initialMessage := fmt.Sprintf("New request received\nURL:%+v\nMethod:%+v\nHeaders:%+v\nBody:%+v", request.URL, request.Method, request.Header, request.Body)
-		p.Logger.Write([]byte(initialMessage))
+		logMessage(p.Logger, *request)
+	}
+}
 
-		responseMessage := fmt.Sprintf("RESPONSE:\nHeaders\n%+v\nBody:\n%+v", response.Header, body)
-
-		p.Logger.Write([]byte(responseMessage))
+func stripProxyHeaders(request *http.Request) {
+	for key, _ := range request.Header {
+		if strings.HasPrefix(key, "Proxy") {
+			request.Header.Del(key)
+		}
 	}
 }
 
@@ -63,6 +70,11 @@ func writeHeaders(w http.ResponseWriter, response http.Response) {
 	for key, values := range response.Header {
 		w.Header()[key] = values
 	}
+}
+
+func logMessage(logger io.Writer, request http.Request) {
+	initialMessage := fmt.Sprintf("New request received\nURL:%+v\nMethod:%+v\nHeaders:%+v\nBody:%+v", request.URL, request.Method, request.Header, request.Body)
+	logger.Write([]byte(initialMessage))
 }
 
 func (p *ProxyServer) AttachLogger(logger io.Writer) {
