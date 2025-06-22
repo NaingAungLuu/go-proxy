@@ -22,23 +22,16 @@ type ProxyHandler struct {
 }
 
 func (p *ProxyServer) ServeHTTP(w http.ResponseWriter, request *http.Request) {
+	// Setup Upstream request
 	newRequest := createUpStreamRequest(*request, p.URL)
+
+	// Make Network Request
 	response, err := p.HttpClient.Do(newRequest)
-
 	if err != nil {
 		log.Fatalf("An error occurred: %+v", err)
 	}
 
-	body, err := io.ReadAll(response.Body)
-	defer response.Body.Close()
-
-	if err != nil {
-		log.Fatalf("An error occurred: %+v", err)
-	}
-
-	writeHeaders(w, *response)
-	w.WriteHeader(response.StatusCode)
-	w.Write(body)
+	writeResponse(w, *response)
 
 	if p.Logger != nil {
 		logMessage(p.Logger, *request)
@@ -68,6 +61,30 @@ func stripProxyHeaders(request *http.Request) {
 			request.Header.Del(key)
 		}
 	}
+}
+
+func writeResponse(w http.ResponseWriter, response http.Response) {
+	body := readResponseBody(response)
+
+	// Write Headers
+	writeHeaders(w, response)
+	w.WriteHeader(response.StatusCode)
+
+	// Write Response & Body
+	w.Write(body)
+
+}
+
+func readResponseBody(response http.Response) []byte {
+	// Catch Response Body
+	body, err := io.ReadAll(response.Body)
+	defer response.Body.Close()
+
+	if err != nil {
+		log.Fatalf("Error while reading response body: %+v", err)
+	}
+
+	return body
 }
 
 func writeHeaders(w http.ResponseWriter, response http.Response) {
