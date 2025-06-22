@@ -69,16 +69,19 @@ func TestProxyTunnel(t *testing.T) {
 		proxyServer.ServeHTTP(rr, proxyRequest)
 
 		// Check for headers starting with Proxy
-		for key, _ := range rr.Result().Header {
-			lowerCaseKey := strings.ToLower(key)
-			if strings.HasPrefix(lowerCaseKey, "proxy-") {
-				t.Errorf("Key: %v shouldn't be present in the response", key)
-			}
-		}
+		assertHeaderPrefixNotExist(t, rr.Result().Header, "proxy-")
 
 	})
 }
 
+func assertHeaderPrefixNotExist(t *testing.T, headerList http.Header, prefix string) {
+	for key := range headerList {
+		lowerCaseKey := strings.ToLower(key)
+		if strings.HasPrefix(lowerCaseKey, prefix) {
+			t.Errorf("Key: %v shouldn't be present in the response", key)
+		}
+	}
+}
 func setupMockedServer(t *testing.T) *httptest.Server {
 	mockHttpHandler := func(w http.ResponseWriter, request *http.Request) {
 		defer request.Body.Close()
