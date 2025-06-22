@@ -76,13 +76,13 @@ func getHttpMethodUi(request http.Request) string {
 
 	switch request.Method {
 	case "GET":
-		style.Foreground(lipgloss.Color("#42f5b6"))
+		style = style.Foreground(lipgloss.Color("#42f5b6"))
 	case "POST", "PUT":
-		style.Foreground(lipgloss.Color("#ffbe57"))
+		style = style.Foreground(lipgloss.Color("#ffbe57"))
 	case "DELETE":
-		style.Foreground(lipgloss.Color("#ff5757"))
+		style = style.Foreground(lipgloss.Color("#ff5757"))
 	default:
-		style.Foreground(lipgloss.Color("#57d8ff"))
+		style = style.Foreground(lipgloss.Color("#57d8ff"))
 	}
 
 	return style.Render(request.Method)
