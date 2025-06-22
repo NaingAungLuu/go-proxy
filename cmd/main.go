@@ -4,11 +4,11 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"go-proxy/proxy"
-	"net/http"
-	"os"
-	"strconv"
+	"go-proxy/ui"
+	"log"
 	"testing"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 func TestSomething(t *testing.T) {
@@ -49,14 +49,19 @@ func parseArgs() (string, int, error) {
 }
 
 func main() {
-	url, port, err := parseArgs()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	// url, port, err := parseArgs()
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
 
-	fmt.Printf("Starting Server on port %+v...", port)
-	server := proxy.NewServer(url)
-	server.AttachLogger(os.Stdout)
-	http.ListenAndServe(":"+strconv.Itoa(port), http.HandlerFunc(server.ServeHTTP))
+	p := tea.NewProgram(ui.NewModel(), tea.WithAltScreen())
+	if _, err := p.Run(); err != nil {
+		log.Fatal(err)
+	}
+	// fmt.Printf("Starting Server on port %+v...", port)
+	// server := proxy.NewServer(url)
+	// logger := proxy.NewLogger()
+	// server.AttachLogger(logger)
+	// http.ListenAndServe(":"+strconv.Itoa(port), http.HandlerFunc(server.ServeHTTP))
 }
