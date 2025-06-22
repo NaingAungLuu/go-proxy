@@ -4,8 +4,11 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"go-proxy/proxy"
 	"go-proxy/ui"
 	"log"
+	"net/http"
+	"strconv"
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -48,20 +51,33 @@ func parseArgs() (string, int, error) {
 	return *baseUrl, finalPort, nil
 }
 
+type UILogger struct {
+	program tea.Program
+}
+
+func (l *UILogger) Log(request *http.Request) {
+	l.program.Send(ui.LogEvent{Request: request})
+}
+
+func startServer(url string, port int, p *tea.Program) {
+	go func() {
+		server := proxy.NewServer(url)
+		server.AttachLogger(&UILogger{program: *p})
+		http.ListenAndServe(":"+strconv.Itoa(port), http.HandlerFunc(server.ServeHTTP))
+	}()
+}
 func main() {
-	// url, port, err := parseArgs()
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
+	url, port, err := parseArgs()
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	p := tea.NewProgram(ui.NewModel(), tea.WithAltScreen())
+	startServer(url, port, p)
+
 	if _, err := p.Run(); err != nil {
 		log.Fatal(err)
 	}
-	// fmt.Printf("Starting Server on port %+v...", port)
-	// server := proxy.NewServer(url)
-	// logger := proxy.NewLogger()
-	// server.AttachLogger(logger)
-	// http.ListenAndServe(":"+strconv.Itoa(port), http.HandlerFunc(server.ServeHTTP))
 }

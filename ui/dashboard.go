@@ -19,11 +19,16 @@ type newLog []byte
 
 type tickMsg time.Time
 
+type LogEvent struct {
+	Request *http.Request
+}
+
 func (m Model) Init() tea.Cmd {
-	return tick()
+	return tea.WindowSize()
 }
 
 func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
+
 	switch msg := message.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -31,13 +36,27 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 
-	case tickMsg:
-		request, _ := http.NewRequest("GET", "https://google.com", nil)
-		m.Logs = append(m.Logs, logRequest(request))
-		return m, tick()
+	case tea.WindowSizeMsg:
+		m.updateWindowSize(msg.Width, msg.Height)
+		return m, nil
 
+	case LogEvent:
+		tea.Println("Log Event received!")
+		m.Logs = append(m.Logs, LogRequest(msg.Request))
+		return m, nil
 	}
 	return m, nil
+}
+
+func (m *Model) updateWindowSize(width, height int) {
+	m.vp.Width = width
+	m.vp.Height = height
+	m.vp.Style.Width(width)
+	m.vp.Style.Height(height)
+	// m.vp.Style = lipgloss.NewStyle().
+	// 	BorderStyle(lipgloss.RoundedBorder()).
+	// 	BorderForeground(lipgloss.Color("62")).
+	// 	PaddingRig
 }
 
 func NewModel() *Model {
@@ -62,10 +81,10 @@ func (m Model) View() string {
 }
 
 func (m Model) LogRequest(request *http.Request) {
-	m.Logs = append(m.Logs, logRequest(request))
+	m.Logs = append(m.Logs, LogRequest(request))
 }
 
-func logRequest(request *http.Request) string {
+func LogRequest(request *http.Request) string {
 	return getHttpMethodUi(*request) + " " + request.Host
 }
 

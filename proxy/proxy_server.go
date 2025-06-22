@@ -1,7 +1,6 @@
 package proxy
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -11,7 +10,7 @@ import (
 type ProxyServer struct {
 	HttpClient *http.Client
 	URL        string
-	Logger     io.Writer
+	Logger     RequestLogger
 }
 
 type ProxyHandler struct {
@@ -19,6 +18,10 @@ type ProxyHandler struct {
 	Logger     io.Writer
 	URL        string
 	Port       int
+}
+
+type RequestLogger interface {
+	Log(request *http.Request)
 }
 
 func (p *ProxyServer) ServeHTTP(w http.ResponseWriter, request *http.Request) {
@@ -34,7 +37,7 @@ func (p *ProxyServer) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 	writeResponse(w, *response)
 
 	if p.Logger != nil {
-		logMessage(p.Logger, *request)
+		p.Logger.Log(request)
 	}
 }
 
@@ -94,12 +97,7 @@ func writeHeaders(w http.ResponseWriter, response http.Response) {
 	}
 }
 
-func logMessage(logger io.Writer, request http.Request) {
-	initialMessage := fmt.Sprintf("New request received\nURL:%+v\nMethod:%+v\nHeaders:%+v\nBody:%+v", request.URL, request.Method, request.Header, request.Body)
-	logger.Write([]byte(initialMessage))
-}
-
-func (p *ProxyServer) AttachLogger(logger io.Writer) {
+func (p *ProxyServer) AttachLogger(logger RequestLogger) {
 	p.Logger = logger
 }
 

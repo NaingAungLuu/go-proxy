@@ -1,21 +1,18 @@
 package proxy_test
 
 import (
-	"bytes"
 	"go-proxy/proxy"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
 
-type CustomLogger struct {
-	Buffer *bytes.Buffer
-	Test   string
+type CustomLoggerSpy struct {
+	TimesCalled int
 }
 
-func (l *CustomLogger) Write(b []byte) (n int, err error) {
-	l.Buffer.Write(b)
-	return l.Buffer.Len(), nil
+func (l *CustomLoggerSpy) Log(request *http.Request) {
+	l.TimesCalled++
 }
 
 func TestLogger(t *testing.T) {
@@ -27,8 +24,7 @@ func TestLogger(t *testing.T) {
 	server := proxy.NewServer(mockedServer.URL)
 
 	// Setup custom log buffer catcher
-	logBuffer := &bytes.Buffer{}
-	customLogger := CustomLogger{Buffer: logBuffer}
+	customLogger := CustomLoggerSpy{}
 	// Attach custom logger buffer to proxy server
 	server.AttachLogger(&customLogger)
 
@@ -41,7 +37,7 @@ func TestLogger(t *testing.T) {
 
 	server.ServeHTTP(httptest.NewRecorder(), request)
 
-	if logBuffer.Len() <= 0 {
+	if customLogger.TimesCalled < 1 {
 		t.Error("Log buffer not received")
 	}
 }
