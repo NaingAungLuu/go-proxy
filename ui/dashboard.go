@@ -85,7 +85,7 @@ func (m Model) LogRequest(request *http.Request) {
 }
 
 func LogRequest(request *http.Request) string {
-	return getHttpMethodUi(*request) + " " + request.Host
+	return getHttpMethodUi(*request) + " " + getRequestHostUi(*request) + " " + getRequestPathUi(*request)
 }
 
 func getHttpMethodUi(request http.Request) string {
@@ -107,8 +107,19 @@ func getHttpMethodUi(request http.Request) string {
 	return style.Render(request.Method)
 }
 
-func tick() tea.Cmd {
-	return tea.Tick(time.Second, func(t time.Time) tea.Msg {
-		return tickMsg(t)
-	})
+func getRequestHostUi(request http.Request) string {
+	style := lipgloss.NewStyle().
+		Bold(false).
+		Foreground(lipgloss.Color("#FFFFFF"))
+
+	return style.Render(request.Host)
+
+}
+
+func getRequestPathUi(request http.Request) string {
+	style := lipgloss.NewStyle().
+		Bold(false).
+		Foreground(lipgloss.Color("#FAFAFA"))
+
+	return style.Render(request.URL.String())
 }
