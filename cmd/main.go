@@ -9,14 +9,9 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
-
-func TestSomething(t *testing.T) {
-	t.Error("Wassupppp")
-}
 
 // parseArgs parses and validates command line arguments
 // Returns the URL, port, and any error encountered during parsing or validation
@@ -74,7 +69,7 @@ func main() {
 		return
 	}
 
-	p := tea.NewProgram(ui.NewModel(), tea.WithAltScreen())
+	p := tea.NewProgram(ui.NewModel(), tea.WithAltScreen(), tea.WithMouseCellMotion())
 	startServer(url, port, p)
 
 	if _, err := p.Run(); err != nil {

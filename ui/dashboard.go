@@ -28,6 +28,10 @@ func (m Model) Init() tea.Cmd {
 }
 
 func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
+	var (
+		cmd  tea.Cmd
+		cmds []tea.Cmd
+	)
 
 	switch msg := message.(type) {
 	case tea.KeyMsg:
@@ -43,9 +47,19 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	case LogEvent:
 		tea.Println("Log Event received!")
 		m.Logs = append(m.Logs, LogRequest(msg.Request))
-		return m, nil
+		vpContent := ""
+		for _, message := range m.Logs {
+			vpContent += message + "\n"
+		}
+		m.vp.SetContent(vpContent)
+		m.vp.ScrollDown(len(m.Logs))
 	}
-	return m, nil
+
+	// Handle keyboard and mouse events in the viewport
+	m.vp, cmd = m.vp.Update(message)
+	cmds = append(cmds, cmd)
+
+	return m, tea.Batch(cmds...)
 }
 
 func (m *Model) updateWindowSize(width, height int) {
@@ -72,11 +86,6 @@ func NewModel() *Model {
 }
 
 func (m Model) View() string {
-	vpContent := ""
-	for _, message := range m.Logs {
-		vpContent += message + "\n"
-	}
-	m.vp.SetContent(vpContent)
 	return m.vp.View()
 }
 
