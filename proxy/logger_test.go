@@ -16,10 +16,6 @@ func (l *CustomLoggerSpy) Log(request *http.Request) {
 }
 
 func TestLogger(t *testing.T) {
-	const (
-		proxyUrl        = "http://dummyjson.com"
-		proxyServerPort = 3000
-	)
 	mockedServer := setupMockedServer(t)
 	server := proxy.NewServer(mockedServer.URL)
 
@@ -29,12 +25,7 @@ func TestLogger(t *testing.T) {
 	server.AttachLogger(&customLogger)
 
 	// Make an api request to the proxy proxy server
-	request, err := http.NewRequest("GET", "/test", nil)
-
-	if err != nil {
-		t.Errorf("Unexpected error occurred: %+v", err)
-	}
-
+	request := httptest.NewRequest("GET", "/test", nil)
 	server.ServeHTTP(httptest.NewRecorder(), request)
 
 	if customLogger.TimesCalled < 1 {

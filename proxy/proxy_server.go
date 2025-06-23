@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -42,8 +43,8 @@ func (p *ProxyServer) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 }
 
 func createUpStreamRequest(request http.Request, destinationUrl string) *http.Request {
-	finalUrl := destinationUrl + request.URL.Path
-	newRequest, _ := http.NewRequest(request.Method, finalUrl, request.Body)
+	newURL, _ := url.Parse(destinationUrl)
+	newRequest, _ := http.NewRequest(request.Method, newURL.String(), request.Body)
 
 	// Copy headers from the original request to the new request
 	for key, values := range request.Header {
@@ -52,6 +53,12 @@ func createUpStreamRequest(request http.Request, destinationUrl string) *http.Re
 		}
 	}
 
+	// Attach proxy related headers
+	newRequest.Header.Add("X-Forwarded-Host", request.Header.Get("Host"))
+	newRequest.URL.Host = newURL.Host
+	newRequest.URL.Scheme = newURL.Scheme
+	newRequest.Host = newURL.Host
+
 	// Preprocess Request
 	stripProxyHeaders(newRequest)
 
@@ -59,7 +66,7 @@ func createUpStreamRequest(request http.Request, destinationUrl string) *http.Re
 }
 
 func stripProxyHeaders(request *http.Request) {
-	for key, _ := range request.Header {
+	for key := range request.Header {
 		if strings.HasPrefix(key, "Proxy") {
 			request.Header.Del(key)
 		}

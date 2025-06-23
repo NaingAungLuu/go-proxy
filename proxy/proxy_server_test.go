@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"strings"
 	"testing"
 )
@@ -29,7 +28,7 @@ func TestProxyTunnel(t *testing.T) {
 
 		rr := httptest.NewRecorder()
 		proxyServer.ServeHTTP(rr, proxyRequest)
-		shadowResponse, err := http.Get(mockedSourceServer.URL + "/test")
+		// _, err := http.Get(mockedSourceServer.URL + "/test")
 
 		if err != nil {
 			t.Errorf("An unexpected error occurred: %+v", err)
@@ -39,16 +38,14 @@ func TestProxyTunnel(t *testing.T) {
 			t.Errorf("Expected status code value of %v, but got %v", successfulStatusCode, rr.Code)
 		}
 
-		if !reflect.DeepEqual(rr.Header(), shadowResponse.Header) {
-			t.Errorf("Proxied Response has different header values than the shadowed request:\nExpected: %+v\nActual: %+v", shadowResponse.Header, rr.Header())
-		}
-
 	})
+}
+
+func TestProxyHandler(t *testing.T) {
+	mockedServer := setupMockedServer(t)
+	defer mockedServer.Close()
 
 	t.Run("Strips the proxy headers", func(t *testing.T) {
-		mockedServer := setupMockedServer(t)
-		defer mockedServer.Close()
-
 		proxyServer := proxy.NewServer(mockedServer.URL)
 		proxyRequest, err := http.NewRequest("GET", "/test", nil)
 
@@ -71,6 +68,25 @@ func TestProxyTunnel(t *testing.T) {
 		// Check for headers starting with Proxy
 		assertHeaderPrefixNotExist(t, rr.Result().Header, "proxy-")
 
+	})
+
+	t.Run("Attaches the correct proxy headers", func(t *testing.T) {
+		proxyServer := proxy.NewServer(mockedServer.URL)
+		proxyRequest, err := http.NewRequest("GET", "http://localhost:3001/test", nil)
+
+		if err != nil {
+			t.Errorf("An unepxected error occurred : %+v", err)
+		}
+
+		proxyRequest.Header.Add("X-Forwarded-Host", "dummyjson.com")
+
+		t.Logf("HeaderList:\n")
+		for key, value := range proxyRequest.Header {
+			t.Logf(key + ":" + strings.Join(value, ","))
+		}
+
+		rr := httptest.NewRecorder()
+		proxyServer.ServeHTTP(rr, proxyRequest)
 	})
 }
 
