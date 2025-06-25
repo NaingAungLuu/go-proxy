@@ -27,7 +27,6 @@ func parseArgs() (string, int, error) {
 	if !flag.Parsed() {
 		return "", 0, errors.New("invalid flags/params")
 	}
-
 	if *baseUrl == "" {
 		return "", 0, fmt.Errorf("URL cannot be empty")
 	}
