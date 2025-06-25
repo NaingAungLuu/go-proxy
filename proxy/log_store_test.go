@@ -8,10 +8,10 @@ import (
 
 func TestLogStoreEntry(t *testing.T) {
 	t.Run("Inserts the logs correctly", func(t *testing.T) {
-		logStore := NewLogStore()
+		var logStore LogStore = NewLogStore()
 		request := httptest.NewRequest("GET", "/", nil)
 		response := &http.Response{}
-		logStore.Insert(request, response)
+		logStore.Save(request, response)
 	})
 }
 
