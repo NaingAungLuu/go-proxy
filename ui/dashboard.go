@@ -23,6 +23,19 @@ type LogEvent struct {
 	Request *http.Request
 }
 
+var (
+	titleStyle = lipgloss.NewStyle().AlignHorizontal(lipgloss.Left).
+		// BorderStyle(lipgloss.RoundedBorder()).
+		// BorderBottom(false).BorderTop(true).BorderLeft(true).BorderRight(true).
+		// BorderForeground(lipgloss.Color("62")).
+		Foreground(lipgloss.NoColor{}).
+		Background(lipgloss.Color("62")).
+		ColorWhitespace(true).
+		Padding(0, 1).
+		MarginLeft(1).
+		MarginTop(1)
+)
+
 func (m Model) Init() tea.Cmd {
 	return tea.WindowSize()
 }
@@ -63,14 +76,11 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *Model) updateWindowSize(width, height int) {
+	_, titleHeight := titleStyle.GetFrameSize()
 	m.vp.Width = width
-	m.vp.Height = height
+	m.vp.Height = height - (titleHeight) // - titleHeight
 	m.vp.Style.Width(width)
-	m.vp.Style.Height(height)
-	// m.vp.Style = lipgloss.NewStyle().
-	// 	BorderStyle(lipgloss.RoundedBorder()).
-	// 	BorderForeground(lipgloss.Color("62")).
-	// 	PaddingRig
+	m.vp.Style.Height(height - (titleHeight))
 }
 
 func NewModel() *Model {
@@ -78,15 +88,15 @@ func NewModel() *Model {
 	vp.Style = lipgloss.NewStyle().
 		BorderStyle(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color("62")).
-		PaddingRight(2)
-
+		MarginTop(1).
+		PaddingLeft(1)
 	return &Model{
 		vp: vp,
 	}
 }
 
 func (m Model) View() string {
-	return m.vp.View()
+	return titleStyle.Render("Logs") + m.vp.View()
 }
 
 func (m Model) LogRequest(request *http.Request) {
