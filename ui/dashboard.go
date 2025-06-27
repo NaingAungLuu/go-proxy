@@ -19,19 +19,36 @@ type newLog []byte
 
 type tickMsg time.Time
 
+const (
+	defaultTextColor = "#FAFAFA"
+)
+
+var (
+	viewPortStyle = lipgloss.NewStyle().
+			BorderStyle(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("62")).
+			Margin(1).
+			MarginTop(1).
+			PaddingLeft(1)
+
+	requestPathStyle = lipgloss.NewStyle().
+				Bold(false).
+				Foreground(lipgloss.Color("#FAFAFA"))
+
+	httpMethodStyle = lipgloss.NewStyle().
+			AlignHorizontal(lipgloss.Left).
+			Bold(true)
+
+	requestHostStyle = lipgloss.NewStyle().
+				Bold(false).
+				Foreground(lipgloss.Color("#FFFFFF"))
+
+	titleBar = NewTitleBar("Logs")
+)
+
 type LogEvent struct {
 	Request *http.Request
 }
-
-var (
-	titleStyle = lipgloss.NewStyle().AlignHorizontal(lipgloss.Left).
-		Foreground(lipgloss.NoColor{}).
-		Background(lipgloss.Color("62")).
-		Padding(0, 1).
-		MarginLeft(2).
-		MarginTop(1)
-	titleBar = NewTitleBar("Logs")
-)
 
 func (m Model) Init() tea.Cmd {
 	return tea.WindowSize()
@@ -55,14 +72,7 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case LogEvent:
-		tea.Println("Log Event received!")
-		m.Logs = append(m.Logs, LogRequest(msg.Request))
-		vpContent := ""
-		for _, message := range m.Logs {
-			vpContent += message + "\n"
-		}
-		m.vp.SetContent(vpContent)
-		m.vp.ScrollDown(len(m.Logs))
+		m.LogRequest(msg.Request)
 	}
 
 	// Handle keyboard and mouse events in the viewport
@@ -73,7 +83,6 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *Model) updateWindowSize(width, height int) {
-	_, titleHeight := titleStyle.GetFrameSize()
 	_, titleHeight := titleBar.GetFrameSize()
 	m.vp.Width = width
 	m.vp.Height = height - (titleHeight)
@@ -83,26 +92,25 @@ func (m *Model) updateWindowSize(width, height int) {
 
 func NewModel() *Model {
 	vp := viewport.New(78, 20)
-	vp.Style = lipgloss.NewStyle().
-		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("62")).
-		Margin(1).
-		MarginTop(1).
-		PaddingLeft(1)
-
+	vp.Style = viewPortStyle
 	return &Model{
 		vp: vp,
 	}
 }
 
 func (m Model) View() string {
-	return titleStyle.Render("Logs") + m.vp.View()
 	return titleBar.Render("Logs") +
 		m.vp.View()
 }
 
 func (m Model) LogRequest(request *http.Request) {
 	m.Logs = append(m.Logs, LogRequest(request))
+	vpcontent := ""
+	for _, message := range m.Logs {
+		vpcontent += message + "\n"
+	}
+	m.vp.SetContent(vpcontent)
+	m.vp.ScrollDown(len(m.Logs))
 }
 
 func LogRequest(request *http.Request) string {
@@ -110,37 +118,27 @@ func LogRequest(request *http.Request) string {
 }
 
 func getHttpMethodUi(request http.Request) string {
-	style := lipgloss.NewStyle().
-		AlignHorizontal(lipgloss.Left).
-		Bold(true)
-
+	color := defaultTextColor
 	switch request.Method {
 	case "GET":
-		style = style.Foreground(lipgloss.Color("#42f5b6"))
+		color = "#42f5b6"
 	case "POST", "PUT":
-		style = style.Foreground(lipgloss.Color("#ffbe57"))
+		color = "#ffbe57"
 	case "DELETE":
-		style = style.Foreground(lipgloss.Color("#ff5757"))
+		color = "#ff5757"
 	default:
-		style = style.Foreground(lipgloss.Color("#57d8ff"))
+		color = "#57d8ff"
 	}
 
+	style := httpMethodStyle.Foreground(lipgloss.Color(color))
 	return style.Render(request.Method)
 }
 
 func getRequestHostUi(request http.Request) string {
-	style := lipgloss.NewStyle().
-		Bold(false).
-		Foreground(lipgloss.Color("#FFFFFF"))
-
-	return style.Render(request.Host)
+	return requestHostStyle.Render(request.Host)
 
 }
 
 func getRequestPathUi(request http.Request) string {
-	style := lipgloss.NewStyle().
-		Bold(false).
-		Foreground(lipgloss.Color("#FAFAFA"))
-
-	return style.Render(request.URL.String())
+	return requestPathStyle.Render(request.URL.String())
 }
