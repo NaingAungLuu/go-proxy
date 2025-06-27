@@ -30,6 +30,7 @@ var (
 		Padding(0, 1).
 		MarginLeft(2).
 		MarginTop(1)
+	titleBar = NewTitleBar("Logs")
 )
 
 func (m Model) Init() tea.Cmd {
@@ -73,6 +74,7 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m *Model) updateWindowSize(width, height int) {
 	_, titleHeight := titleStyle.GetFrameSize()
+	_, titleHeight := titleBar.GetFrameSize()
 	m.vp.Width = width
 	m.vp.Height = height - (titleHeight)
 	m.vp.Style.Width(width)
@@ -95,6 +97,8 @@ func NewModel() *Model {
 
 func (m Model) View() string {
 	return titleStyle.Render("Logs") + m.vp.View()
+	return titleBar.Render("Logs") +
+		m.vp.View()
 }
 
 func (m Model) LogRequest(request *http.Request) {
