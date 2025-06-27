@@ -25,9 +25,6 @@ type LogEvent struct {
 
 var (
 	titleStyle = lipgloss.NewStyle().AlignHorizontal(lipgloss.Left).
-		// BorderStyle(lipgloss.RoundedBorder()).
-		// BorderBottom(false).BorderTop(true).BorderLeft(true).BorderRight(true).
-		// BorderForeground(lipgloss.Color("62")).
 		Foreground(lipgloss.NoColor{}).
 		Background(lipgloss.Color("62")).
 		Padding(0, 1).
