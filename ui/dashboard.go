@@ -30,9 +30,8 @@ var (
 		// BorderForeground(lipgloss.Color("62")).
 		Foreground(lipgloss.NoColor{}).
 		Background(lipgloss.Color("62")).
-		ColorWhitespace(true).
 		Padding(0, 1).
-		MarginLeft(1).
+		MarginLeft(2).
 		MarginTop(1)
 )
 
@@ -78,7 +77,7 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 func (m *Model) updateWindowSize(width, height int) {
 	_, titleHeight := titleStyle.GetFrameSize()
 	m.vp.Width = width
-	m.vp.Height = height - (titleHeight) // - titleHeight
+	m.vp.Height = height - (titleHeight)
 	m.vp.Style.Width(width)
 	m.vp.Style.Height(height - (titleHeight))
 }
@@ -88,8 +87,10 @@ func NewModel() *Model {
 	vp.Style = lipgloss.NewStyle().
 		BorderStyle(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color("62")).
+		Margin(1).
 		MarginTop(1).
 		PaddingLeft(1)
+
 	return &Model{
 		vp: vp,
 	}
