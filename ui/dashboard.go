@@ -59,11 +59,11 @@ var (
 /**
 * Tea Model Functions: Init(), Update() and View()
 **/
-func (m Model) Init() tea.Cmd {
+func (m *Model) Init() tea.Cmd {
 	return tea.WindowSize()
 }
 
-func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
+func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
@@ -91,7 +91,7 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m Model) View() string {
+func (m *Model) View() string {
 	return titleBar.Render("Logs") +
 		m.vp.View()
 }
@@ -99,7 +99,7 @@ func (m Model) View() string {
 /**
 * Member Functions
 **/
-func (m Model) LogRequest(request *http.Request) {
+func (m *Model) LogRequest(request *http.Request) {
 	m.Logs = append(m.Logs, getRequestLogUi(request))
 	vpcontent := ""
 	for _, message := range m.Logs {
