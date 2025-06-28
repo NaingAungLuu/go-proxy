@@ -21,7 +21,8 @@ func NewTitleBar(title string) TitleBar {
 		Foreground(lipgloss.NoColor{}).
 		Background(lipgloss.Color("62")).
 		Padding(0, 1).
-		MarginLeft(2)
+		MarginLeft(2).
+		MarginTop(1)
 
 	return TitleBar{
 		title: title,
