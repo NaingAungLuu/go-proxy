@@ -14,13 +14,6 @@ type ProxyServer struct {
 	Logger     RequestLogger
 }
 
-type ProxyHandler struct {
-	HttpClient *http.Client
-	Logger     io.Writer
-	URL        string
-	Port       int
-}
-
 type RequestLogger interface {
 	Log(request *http.Request)
 }
