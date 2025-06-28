@@ -93,7 +93,9 @@ func readResponseBody(response http.Response) []byte {
 func writeHeaders(w http.ResponseWriter, response http.Response) {
 	// Copy headers from the response to the ResponseWriter
 	for key, values := range response.Header {
-		w.Header()[key] = values
+		for _, value := range values {
+			w.Header().Set(key, value)
+		}
 	}
 }
 
