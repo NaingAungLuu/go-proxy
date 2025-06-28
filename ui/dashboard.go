@@ -53,6 +53,11 @@ var (
 				Bold(false).
 				Foreground(lipgloss.Color("#FFFFFF"))
 
+	helpStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("241")).
+			MarginTop(1).
+			MarginLeft(2)
+
 	titleBar = NewTitleBar("Logs")
 )
 
@@ -93,7 +98,8 @@ func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m *Model) View() string {
 	return titleBar.Render("Logs") +
-		m.vp.View()
+		m.vp.View() +
+		helpStyle.Render("↑/↓: Navigate • q or esc: Quit")
 }
 
 /**
@@ -111,10 +117,11 @@ func (m *Model) LogRequest(request *http.Request) {
 
 func (m *Model) updateWindowSize(width, height int) {
 	_, titleHeight := titleBar.GetFrameSize()
+	helperHeight := helpStyle.GetVerticalFrameSize()
 	m.vp.Width = width
-	m.vp.Height = height - (titleHeight)
+	m.vp.Height = height - (titleHeight + helperHeight)
 	m.vp.Style.Width(width)
-	m.vp.Style.Height(height - (titleHeight))
+	m.vp.Style.Height(height - (titleHeight + helperHeight))
 }
 
 /**
