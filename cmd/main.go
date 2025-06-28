@@ -45,21 +45,17 @@ func parseArgs() (string, int, error) {
 	return *baseUrl, finalPort, nil
 }
 
-type UILogger struct {
-	program tea.Program
-}
-
-func (l *UILogger) Log(request *http.Request) {
-	l.program.Send(ui.LogEvent{Request: request})
-}
-
 func startServer(url string, port int, p *tea.Program) {
+	// Starting the function as a "Goroutine" to allow both server and terminal UI
+	// to run without blocking each other
 	go func() {
+		logger := ui.NewUiLogger(*p)
 		server := proxy.NewServer(url)
-		server.AttachLogger(&UILogger{program: *p})
+		server.AttachLogger(&logger)
 		http.ListenAndServe(":"+strconv.Itoa(port), http.HandlerFunc(server.ServeHTTP))
 	}()
 }
+
 func main() {
 	url, port, err := parseArgs()
 
