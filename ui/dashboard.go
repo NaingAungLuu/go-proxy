@@ -15,10 +15,20 @@ type Model struct {
 	marker int
 }
 
+type LogEvent struct {
+	Request *http.Request
+}
+
+/**
+* tea.Msg
+ */
 type newLog []byte
 
 type tickMsg time.Time
 
+/**
+* Style Configurations
+**/
 const (
 	defaultTextColor = "#FAFAFA"
 )
@@ -46,10 +56,9 @@ var (
 	titleBar = NewTitleBar("Logs")
 )
 
-type LogEvent struct {
-	Request *http.Request
-}
-
+/**
+* Tea Model Functions: Init(), Update() and View()
+**/
 func (m Model) Init() tea.Cmd {
 	return tea.WindowSize()
 }
@@ -82,29 +91,16 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m *Model) updateWindowSize(width, height int) {
-	_, titleHeight := titleBar.GetFrameSize()
-	m.vp.Width = width
-	m.vp.Height = height - (titleHeight)
-	m.vp.Style.Width(width)
-	m.vp.Style.Height(height - (titleHeight))
-}
-
-func NewModel() *Model {
-	vp := viewport.New(78, 20)
-	vp.Style = viewPortStyle
-	return &Model{
-		vp: vp,
-	}
-}
-
 func (m Model) View() string {
 	return titleBar.Render("Logs") +
 		m.vp.View()
 }
 
+/**
+* Member Functions
+**/
 func (m Model) LogRequest(request *http.Request) {
-	m.Logs = append(m.Logs, LogRequest(request))
+	m.Logs = append(m.Logs, getRequestLogUi(request))
 	vpcontent := ""
 	for _, message := range m.Logs {
 		vpcontent += message + "\n"
@@ -113,7 +109,18 @@ func (m Model) LogRequest(request *http.Request) {
 	m.vp.ScrollDown(len(m.Logs))
 }
 
-func LogRequest(request *http.Request) string {
+func (m *Model) updateWindowSize(width, height int) {
+	_, titleHeight := titleBar.GetFrameSize()
+	m.vp.Width = width
+	m.vp.Height = height - (titleHeight)
+	m.vp.Style.Width(width)
+	m.vp.Style.Height(height - (titleHeight))
+}
+
+/**
+* UI Utilities
+**/
+func getRequestLogUi(request *http.Request) string {
 	return getHttpMethodUi(*request) + " " + getRequestHostUi(*request) + " " + getRequestPathUi(*request)
 }
 
@@ -141,4 +148,15 @@ func getRequestHostUi(request http.Request) string {
 
 func getRequestPathUi(request http.Request) string {
 	return requestPathStyle.Render(request.URL.String())
+}
+
+/**
+* Constructor
+**/
+func NewModel() *Model {
+	vp := viewport.New(78, 20)
+	vp.Style = viewPortStyle
+	return &Model{
+		vp: vp,
+	}
 }
