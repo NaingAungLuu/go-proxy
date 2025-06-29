@@ -64,7 +64,7 @@ func main() {
 		return
 	}
 
-	p := tea.NewProgram(ui.NewModel(), tea.WithAltScreen(), tea.WithMouseCellMotion())
+	p := tea.NewProgram(ui.NewTestModel(url, port), tea.WithAltScreen(), tea.WithMouseCellMotion())
 	startServer(url, port, p)
 
 	if _, err := p.Run(); err != nil {
