@@ -7,15 +7,15 @@ type TitleBar struct {
 	style lipgloss.Style
 }
 
-func (t *TitleBar) Render(content ...string) string {
-	return t.style.Render(content...)
+func (t *TitleBar) Render() string {
+	return t.style.Render(t.title)
 }
 
 func (t *TitleBar) GetFrameSize() (x, y int) {
 	return t.style.GetFrameSize()
 }
 
-func NewTitleBar(title string) TitleBar {
+func NewTitleBar(title string) *TitleBar {
 	titleStyle := lipgloss.NewStyle().
 		AlignHorizontal(lipgloss.Left).
 		Foreground(lipgloss.NoColor{}).
@@ -24,7 +24,7 @@ func NewTitleBar(title string) TitleBar {
 		MarginLeft(2).
 		MarginTop(1)
 
-	return TitleBar{
+	return &TitleBar{
 		title: title,
 		style: titleStyle,
 	}
