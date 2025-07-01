@@ -80,10 +80,10 @@ func (m *TestModel) View() string {
 func (m *TestModel) updateFrameSize(width, height int) {
 	panelHeight := height - helpStyle.GetVerticalFrameSize()
 	// Width = half of the screen - (each panel's horizontal margin)
-	panelWidth := (width / 2) - (2 * panelStyle.GetHorizontalMargins())
-
-	m.infoPanel.SetFrameSize(panelWidth, panelHeight/2)
-	m.logPanel.SetFrameSize(panelWidth, panelHeight)
+	infoPanelWidth := (width / 3) - (2 * panelStyle.GetHorizontalMargins())
+	logPanelWidth := ((width * 2) / 3) - (2 * panelStyle.GetHorizontalMargins())
+	m.infoPanel.SetFrameSize(infoPanelWidth, panelHeight/2)
+	m.logPanel.SetFrameSize(logPanelWidth, panelHeight)
 }
 
 /**
