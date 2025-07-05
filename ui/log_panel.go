@@ -1,7 +1,11 @@
 package ui
 
 import (
+	"fmt"
+	"go-proxy/proxy"
 	"net/http"
+	"strconv"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -13,7 +17,7 @@ type LogPanel struct {
 }
 
 type LogEvent struct {
-	Request *http.Request
+	log proxy.RequestLog
 }
 
 /**
@@ -41,6 +45,11 @@ var (
 	requestHostStyle = lipgloss.NewStyle().
 				Bold(false).
 				Foreground(lipgloss.Color("#FFFFFF"))
+
+	requestTimeStyle = lipgloss.NewStyle().
+				Bold(false).
+				Foreground(lipgloss.Color("#FAFAFA")).
+				AlignHorizontal(lipgloss.Right)
 )
 
 func (p *LogPanel) Update(message tea.Msg) (tea.Msg, tea.Cmd) {
@@ -51,7 +60,7 @@ func (p *LogPanel) Update(message tea.Msg) (tea.Msg, tea.Cmd) {
 
 	switch msg := message.(type) {
 	case LogEvent:
-		p.LogRequest(msg.Request)
+		p.LogRequest(msg.log)
 	}
 	_, cmd = p.panel.Update(message)
 	cmds = append(cmds, cmd)
@@ -70,8 +79,8 @@ func (p *LogPanel) SetFrameSize(width, height int) {
 /**
 * Member Functions
 **/
-func (p *LogPanel) LogRequest(request *http.Request) {
-	p.Logs = append(p.Logs, getRequestLogUi(request))
+func (p *LogPanel) LogRequest(log proxy.RequestLog) {
+	p.Logs = append(p.Logs, getRequestLogUi(log))
 	vpcontent := ""
 	for _, message := range p.Logs {
 		vpcontent += message + "\n"
@@ -83,8 +92,14 @@ func (p *LogPanel) LogRequest(request *http.Request) {
 /**
 * UI Utilities
 **/
-func getRequestLogUi(request *http.Request) string {
-	return getHttpMethodUi(*request) + " " + getRequestHostUi(*request) + " " + getRequestPathUi(*request)
+func getRequestLogUi(log proxy.RequestLog) string {
+	return getHttpMethodUi(log.Request) +
+		" " +
+		getRequestHostUi(log.Request) +
+		" " +
+		getRequestTimeUi(log.Time) +
+		" " +
+		getRequestPathUi(log.Request)
 }
 
 func getHttpMethodUi(request http.Request) string {
@@ -111,6 +126,13 @@ func getRequestHostUi(request http.Request) string {
 
 func getRequestPathUi(request http.Request) string {
 	return requestPathStyle.Render(request.URL.String())
+}
+
+func getRequestTimeUi(time time.Duration) string {
+	milliseconds := time.Abs().Milliseconds()
+	durationString := strconv.Itoa(int(milliseconds))
+	label := fmt.Sprintf("%vms", durationString)
+	return requestTimeStyle.Render(label)
 }
 
 func NewLogPanel() *LogPanel {
