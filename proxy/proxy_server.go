@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 type ProxyServer struct {
@@ -14,16 +15,19 @@ type ProxyServer struct {
 	Logger     RequestLogger
 }
 
-type RequestLogger interface {
-	Log(request *http.Request)
-}
-
 func (p *ProxyServer) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 	// Setup Upstream request
 	newRequest := createUpStreamRequest(*request, p.URL)
 
+	// Mark Start Time
+	startTime := time.Now()
+
 	// Make Network Request
 	response, err := p.HttpClient.Do(newRequest)
+
+	// Mark End Time
+	timeTaken := time.Since(startTime)
+
 	if err != nil {
 		log.Fatalf("An error occurred: %+v", err)
 	}
@@ -31,7 +35,8 @@ func (p *ProxyServer) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 	writeResponse(w, *response)
 
 	if p.Logger != nil {
-		p.Logger.Log(request)
+		log := NewRequestLog(*request, timeTaken)
+		p.Logger.Log(log)
 	}
 }
 

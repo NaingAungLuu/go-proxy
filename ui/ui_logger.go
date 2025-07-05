@@ -1,7 +1,7 @@
 package ui
 
 import (
-	"net/http"
+	"go-proxy/proxy"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -10,8 +10,8 @@ type UILogger struct {
 	program tea.Program
 }
 
-func (l *UILogger) Log(request *http.Request) {
-	l.program.Send(LogEvent{Request: request})
+func (l *UILogger) Log(log proxy.RequestLog) {
+	l.program.Send(LogEvent{log: log})
 }
 
 func NewUiLogger(program tea.Program) UILogger {
