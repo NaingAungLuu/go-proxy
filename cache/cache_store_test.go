@@ -44,6 +44,23 @@ func TestCacheStore(t *testing.T) {
 		}
 	})
 
+	t.Run("CacheStore overrides the value correctly", func(t *testing.T) {
+		cache := NewCacheStore()
+		// First Entry
+		key := "test"
+		initialValue := "Hello"
+		overridenValue := "Hi"
+
+		cache.Put(key, initialValue)
+		cache.Put(key, overridenValue)
+
+		actual := cache.Get(key)
+
+		if actual != overridenValue {
+			t.Errorf("CacheStore does not override the key correctly. Expecting %v, actual: %v", overridenValue, actual)
+		}
+	})
+
 	t.Run("CacheStore returns Key existence correctly", func(t *testing.T) {
 		cache := NewCacheStore()
 
