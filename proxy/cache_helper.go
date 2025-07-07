@@ -5,10 +5,14 @@ import (
 	"strings"
 )
 
+const (
+	separator = ";"
+)
+
 func UniqueKeyForRequest(request http.Request) string {
-	key := ""
-	key += strings.ToLower(request.Method)
-	key += ";"
-	key += request.URL.String()
-	return key
+	keySegments := []string{
+		strings.ToLower(request.Method),
+		request.URL.String(),
+	}
+	return strings.Join(keySegments, separator)
 }
