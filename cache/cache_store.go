@@ -3,6 +3,7 @@ package cache
 type CacheStore interface {
 	Put(key, value string)
 	Get(key string) string
+	Exists(key string) bool
 }
 
 type OnMemoryCache struct {
@@ -15,6 +16,10 @@ func (s *OnMemoryCache) Put(key, value string) {
 
 func (s *OnMemoryCache) Get(key string) string {
 	return s.memory[key]
+}
+
+func (s *OnMemoryCache) Exists(key string) bool {
+	return s.memory[key] != ""
 }
 
 func NewCacheStore() CacheStore {

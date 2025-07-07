@@ -44,5 +44,14 @@ func TestCacheStore(t *testing.T) {
 		}
 	})
 
-}
+	t.Run("CacheStore returns Key existence correctly", func(t *testing.T) {
+		cache := NewCacheStore()
 
+		for _, testCase := range testCases {
+			cache.Put(testCase.key, testCase.value)
+			if !cache.Exists(testCase.key) {
+				t.Errorf("Cache Entry with key: %v should exist on the cache", testCase.key)
+			}
+		}
+	})
+}
