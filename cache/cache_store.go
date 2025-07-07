@@ -10,13 +10,16 @@ type OnMemoryCache struct {
 }
 
 func (s *OnMemoryCache) Put(key, value string) {
-
+	s.memory[key] = value
 }
 
 func (s *OnMemoryCache) Get(key string) string {
-	return "Hello, World"
+	return s.memory[key]
 }
 
 func NewCacheStore() CacheStore {
-	return &OnMemoryCache{}
+	return &OnMemoryCache{
+		memory: make(map[string]string),
+	}
 }
+
