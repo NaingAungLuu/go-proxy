@@ -1,8 +1,13 @@
 package proxy
 
 import (
+	"go-proxy/cache"
+	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
+
+	"github.com/charmbracelet/log"
 )
 
 func TestCacheKeyHelper(t *testing.T) {
@@ -49,3 +54,29 @@ func TestCacheKeyHelper(t *testing.T) {
 	})
 }
 
+func TestSerializer(t *testing.T) {
+	cache := cache.NewCacheStore()
+	request, err := http.NewRequest("GET", "https://dummyjson.com/test", nil)
+
+	if err != nil {
+		log.Errorf("Something went wrong: %v", err)
+	}
+
+	response, err := http.DefaultClient.Do(request)
+
+	if err != nil {
+		log.Errorf("Something went wrong: %v", err)
+	}
+
+	t.Run("Serializer returns the correct response", func(t *testing.T) {
+		serializedResponse := SerializeResponse(*response)
+		t.Log(serializedResponse)
+		key := UniqueKeyForRequest(*request)
+		cache.Put(key, serializedResponse)
+		cachedResponseString := cache.Get(key)
+		cachedResponse := ResponseFromString(cachedResponseString)
+		if !reflect.DeepEqual(response, cachedResponse) {
+			t.Errorf("Responses are not the same!\nResponse\n%v\n======\nCache\n%v", response, cachedResponse)
+		}
+	})
+}
