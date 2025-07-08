@@ -71,4 +71,13 @@ func TestCacheStore(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("CacheStore returns non existence of key correctly", func(t *testing.T) {
+		// Get fresh new cache
+		cache := NewCacheStore()
+		key := "non-existing-key"
+		if cache.Exists(key) {
+			t.Errorf("Cache entry with key: %v, shouldn't exist", key)
+		}
+	})
 }
