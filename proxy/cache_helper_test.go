@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"bytes"
 	"go-proxy/cache"
 	"net/http"
 	"net/http/httptest"
@@ -70,13 +71,53 @@ func TestSerializer(t *testing.T) {
 
 	t.Run("Serializer returns the correct response", func(t *testing.T) {
 		serializedResponse := SerializeResponse(*response)
-		t.Log(serializedResponse)
 		key := UniqueKeyForRequest(*request)
 		cache.Put(key, serializedResponse)
 		cachedResponseString := cache.Get(key)
 		cachedResponse := ResponseFromString(cachedResponseString)
-		if !reflect.DeepEqual(response, cachedResponse) {
-			t.Errorf("Responses are not the same!\nResponse\n%v\n======\nCache\n%v", response, cachedResponse)
+
+		if !AssertResponseEqual(t, *response, *cachedResponse) {
+			t.Errorf("Responses are not the same!\nResponse\n%+v\n======\nCache\n%+v", response, cachedResponse)
 		}
 	})
+}
+
+func AssertResponseEqual(t *testing.T, a, b http.Response) bool {
+	t.Helper()
+	if !reflect.DeepEqual(a.Header, b.Header) {
+		return false
+	}
+
+	bodyABuffer := bytes.Buffer{}
+	a.Body.Read(bodyABuffer.Bytes())
+
+	bodyBBuffer := bytes.Buffer{}
+	b.Body.Read(bodyBBuffer.Bytes())
+
+	if bodyABuffer.String() != bodyBBuffer.String() {
+		return false
+	}
+
+	if a.StatusCode != b.StatusCode {
+		return false
+	}
+
+	if a.Proto != b.Proto {
+		return false
+	}
+
+	if a.ProtoMajor != b.ProtoMajor {
+		return false
+	}
+
+	if a.ProtoMinor != b.ProtoMinor {
+		return false
+	}
+
+	if a.ContentLength != b.ContentLength {
+		return false
+	}
+
+	return true
+
 }
