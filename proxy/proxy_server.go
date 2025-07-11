@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"go-proxy/cache"
 	"io"
 	"log"
 	"net/http"
@@ -13,6 +14,7 @@ type ProxyServer struct {
 	HttpClient *http.Client
 	URL        string
 	Logger     RequestLogger
+	Cache      cache.CacheStore
 }
 
 func (p *ProxyServer) ServeHTTP(w http.ResponseWriter, request *http.Request) {
@@ -113,6 +115,7 @@ func NewServer(destinationUrl string) *ProxyServer {
 		URL:        destinationUrl,
 		Logger:     nil,
 		HttpClient: &http.Client{},
+		Cache:      cache.NewCacheStore(),
 	}
 	return server
 }

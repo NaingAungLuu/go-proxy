@@ -29,12 +29,11 @@ func SerializeResponse(response http.Response) string {
 
 	buffer := bytes.Buffer{}
 	response.Write(&buffer)
-
 	return buffer.String()
 }
 
-func ResponseFromString(input string) http.Response {
+func ResponseFromString(input string) *http.Response {
 	reader := bytes.NewReader([]byte(input))
 	response, _ := http.ReadResponse(bufio.NewReader(reader), nil)
-	return *response
+	return response
 }
